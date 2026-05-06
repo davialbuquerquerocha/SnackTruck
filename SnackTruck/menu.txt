@@ -1,0 +1,101 @@
+100
+1 Burger: 9.5
+2 Vegan Burger: 11
+3 Hot Dog: 5
+4 Cheese Dog: 7
+5 Fries: 5
+6 Cheese Fries: 6
+7 Cold Pressed Juice: 7.2
+8 Cold Brew: 3.50
+9 Water: 2
+10 Soda: 2
+11 Misto Quente: 5
+12 Copo de Leite: 4
+13 Cerveja: 5
+14 Vinho: 15
+15 Limonada: 4
+16 Mate Gelado: 3
+17 Agua de Coco: 5
+18 Suco de Maracuja: 6
+19 Suco de Laranja: 5
+20 Vitamina de Banana: 7
+21 Caldo de Cana: 4
+22 Isotonico: 5
+23 Energetico: 8
+24 Tonica: 3.5
+25 Cafe: 2.5
+26 Capuccino: 5
+27 Leite com Cafe: 3
+28 Cha: 2.5
+29 Chocolate Quente: 4
+30 Smoothie: 7
+31 Kombucha: 5
+32 Cerveja Artesanal: 9
+33 Caipirinha: 12
+34 Dose de Cachaca: 8
+35 Pao de Queijo: 3
+36 Biscoito: 2
+37 Bolo Fatia: 5
+38 Sanduiche: 8
+39 Wrap: 10
+40 Esfiha: 4
+41 Coxinha: 4
+42 Bolinho de Bacalhau: 5
+43 Pastel: 5
+44 Quibe: 4
+45 Empada: 4
+46 Tapioca: 6
+47 Crepe: 7
+48 Waffle: 8
+49 Salada: 6
+50 Salada de Fruta: 5
+51 Mousse: 6
+52 Pudim: 5
+53 Sorvete Bola: 5
+54 Picole: 4
+55 Casquinha: 3
+56 Acai: 8
+57 Granola: 4
+58 Milk Shake: 9
+59 Sundae: 7
+60 Brownie: 5
+61 Brigadeiro: 2
+62 Beijinho: 2
+63 Cocada: 3
+64 Palha Italiana: 3
+65 Bala: 0.5
+66 Chiclete: 0.5
+67 Pirulito: 1
+68 Drops: 0.5
+69 Amendoim: 2
+70 Castanha: 3
+71 Pipoca: 3
+72 Banana: 2
+73 Manga: 3
+74 Abacaxi: 4
+75 Melancia: 3
+76 Morango: 4
+77 Uva: 5
+78 Maracuja: 3
+79 Coco: 4
+80 Fruta Mista: 5
+81 Espetinho de Carne: 7
+82 Espetinho de Frango: 6
+83 Espetinho de Queijo: 5
+84 Milho Cozido: 4
+85 Batata Cozida: 3
+86 Amendoim Cozido: 3
+87 Queijo Coalho: 6
+88 Camarao: 15
+89 Porcao de Camarao: 25
+90 File de Peixe: 18
+91 Iscas de Peixe: 12
+92 Moqueca Individual: 20
+93 Agua Com Gas: 2.5
+94 Suco de Acerola: 5
+95 Suco de Caju: 5
+96 Suco de Abacaxi: 5
+97 Suco de Manga: 5
+98 Vitamina de Abacate: 8
+99 Tapioca de Queijo: 7
+100 Tapioca de Chocolate: 8
