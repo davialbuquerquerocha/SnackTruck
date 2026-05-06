@@ -39,7 +39,7 @@ int costomer(int a[100]){
     return it;
 }
 
-void each_item(FILE *file, int alf[100], int c, char prod[][256]){
+void each_item(FILE *file, int alf[100], int c, char prod[][50]){
     
     int d;
     char linha[100];
@@ -59,7 +59,7 @@ void each_item(FILE *file, int alf[100], int c, char prod[][256]){
     }
 }
 
-void total(char prod[][256], int c, float *f){
+void total(char prod[][50], int c, float *f){
     for(int i = 0; i < c; i++){
         int index = strcspn(prod[i], ":");
         index++;
@@ -99,7 +99,7 @@ int main (void){
         int alfa[100]; //cardinal number of each item
         int itens = costomer(alfa); //number of itens
         
-        char eachitem[itens][256]; //item and order
+        char eachitem[itens][50]; //item and order
         memset(eachitem, 0, sizeof(eachitem));
 
         each_item(archive, alfa, itens, eachitem);
