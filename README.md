@@ -13,5 +13,5 @@ While executing:
   - Prints a question asking the costomer if he wishes to order something;
   - Scans the answer; *
   - Prints another question asking the costomer if he wishes something else; *
-  - scans the answer. if 'yes' prints a question asking what the costomer wishes to order ans loop all stpes with asterisk _(*)_. if 'no' then calculate the value of the check and prints.
+  - scans the answer. if 'yes' prints a question asking what the costomer wishes to order ans loop all stpes with asterisk _(*)_. if 'no' then calculate the value of the check and prints.*
 
