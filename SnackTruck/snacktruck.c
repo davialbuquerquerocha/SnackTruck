@@ -11,7 +11,7 @@ void verification(int a[100], int c){
         c++;
         if (c == 5){
 // it's prohibiten to compute on this line
-            printf("wrong answer or Rademaker tried to brake the program\n");
+            printf("wrong answer or Rademaker tried to break the program\n");
             exit(1);
         }//verification
 
@@ -120,7 +120,17 @@ int main (void){
 
         total(eachitem, itens, price);
 
-        printf("the total of the order is R$: %f\n", s);
+        printf("\n\nCHECK\n--------------------\n");
+        for (int i = 0; i < itens; i++){
+            int h = 3;
+            int *p = &h;
+            if (eachitem[i][2] == '0'){
+                h = 4;
+            }
+            printf("%s", eachitem[i] + h);
+        }
+        printf("\n--------------------");
+        printf("\nThe total value of the order is R$: %f\n", s);
 
         fclose(archive);
 
