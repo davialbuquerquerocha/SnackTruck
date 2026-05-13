@@ -1,138 +1,235 @@
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int secver = 1;
-void verification(int a[100], int c){
-    if (a[0] > 100){
-        printf("We dont have this, why don't you pick something else? (item number)\n");
-        scanf("%d", a);
+#define MAX_ITEMS 200
+#define MAX_NAME 64
 
-        c++;
-        if (c == 5){
-// it's prohibiten to compute on this line
-            printf("wrong answer or Rademaker tried to break the program\n");
-            exit(1);
-        }//verification
+typedef struct {
+    int id;
+    char name[MAX_NAME];
+    float price;
+} Item;
 
-        verification(a, c);
+typedef struct {
+    int menu_index;
+    int qty;
+} OrderEntry;
+
+static int load_menu(const char *path, Item items[], int max) {
+    FILE *f = fopen(path, "r");
+    if (!f) return -1;
+
+    char line[256];
+    int n = 0;
+
+    /* primeira linha do menu.txt é o total de itens, ignorar */
+    if (!fgets(line, sizeof(line), f)) { fclose(f); return -1; }
+
+    while (n < max && fgets(line, sizeof(line), f)) {
+        char *space = strchr(line, ' ');
+        char *colon = strchr(line, ':');
+        if (!space || !colon || colon < space) continue;
+
+        *space = '\0';
+        *colon = '\0';
+
+        char *name = space + 1;
+        char *end = colon - 1;
+        while (end > name && *end == ' ') { *end = '\0'; end--; }
+
+        items[n].id = atoi(line);
+        strncpy(items[n].name, name, MAX_NAME - 1);
+        items[n].name[MAX_NAME - 1] = '\0';
+        items[n].price = strtof(colon + 1, NULL);
+        n++;
+    }
+
+    fclose(f);
+    return n;
+}
+
+static int find_in_order(OrderEntry order[], int n_order, int menu_index) {
+    for (int i = 0; i < n_order; i++) {
+        if (order[i].menu_index == menu_index) return i;
+    }
+    return -1;
+}
+
+static void add_to_order(OrderEntry order[], int *n_order, int menu_index) {
+    int idx = find_in_order(order, *n_order, menu_index);
+    if (idx >= 0) {
+        order[idx].qty++;
+    } else {
+        order[*n_order].menu_index = menu_index;
+        order[*n_order].qty = 1;
+        (*n_order)++;
     }
 }
 
-int costomer(int a[100]){
-    int c; //truth or false  
-    char s[5]; //string for user answer
-    int it = 0; 
-    
-
-    do {
-        printf("\nwhat would you like to order? (item number)\n");
-        scanf("%d", a);
-        
-        verification(a, secver);
-
-        printf("\nwould you want to order something else? ('yes' or 'no')\n");
-        scanf("%s", s);
-
-        if(s[0] == 'y' || s[0] == 'Y'){
-            c = 0;
-            }
-        if(s[0] == 'n' || s[0] == 'N'){
-            c = 1;
-        }
-
-        if (s[0] != 'n' && s[0] != 'y' && s[0] != 'N' && s[0] != 'Y'){
-            printf("yes or no Rademaker, not gonna fall for this\n");
-            exit(1);
-        }
-
-        a++;
-        it++;
-    } while(c == 0);
-
-    return it;
-}
-
-void each_item(FILE *file, int alf[100], int c, char prod[][50]){
-    
-    int d;
-    char linha[100];
-    for (int i = 0; i < c; i++){
-        int target = alf[i];
-        rewind(file);
-        
-        while (fgets(linha, sizeof(linha), file)){
-            sscanf(linha, "%d", &d);
-            if (strchr(linha, ':') != NULL){
-                if (d == target){
-                    strcpy(prod[i], linha);
-                    break;
-                }    
-            }
-        }
+static void remove_from_order(OrderEntry order[], int *n_order, int menu_index) {
+    int idx = find_in_order(order, *n_order, menu_index);
+    if (idx < 0) return;
+    if (order[idx].qty > 1) {
+        order[idx].qty--;
+        return;
     }
+    for (int i = idx; i < *n_order - 1; i++) order[i] = order[i + 1];
+    (*n_order)--;
 }
 
-void total(char prod[][50], int c, float *f){
-    for(int i = 0; i < c; i++){
-        int index = strcspn(prod[i], ":");
-        index++;
-        
-        char *ptr_fim;
-
-        float fl = strtof(&prod[i][index], &ptr_fim);
-        *f = *f + fl;
+static float order_total(Item items[], OrderEntry order[], int n_order) {
+    float total = 0.0f;
+    for (int i = 0; i < n_order; i++) {
+        total += items[order[i].menu_index].price * order[i].qty;
     }
+    return total;
 }
 
-int main (void){
+static void draw_menu(WINDOW *win, Item items[], int n_items, int top, int sel) {
+    werase(win);
+    box(win, 0, 0);
+    mvwprintw(win, 0, 2, " Menu ");
 
-    printf("take a look at our menu\n");
-    FILE *archive;
+    int h, w;
+    getmaxyx(win, h, w);
+    int rows = h - 2;
+    int name_w = w - 16;
+    if (name_w < 10) name_w = 10;
 
-        archive = fopen("menu.txt","r");
+    for (int i = 0; i < rows && top + i < n_items; i++) {
+        int idx = top + i;
+        if (idx == sel) wattron(win, A_REVERSE);
+        mvwprintw(win, i + 1, 1, " %3d %-*.*s %6.2f ",
+                  items[idx].id, name_w, name_w,
+                  items[idx].name, items[idx].price);
+        if (idx == sel) wattroff(win, A_REVERSE);
+    }
+    wrefresh(win);
+}
 
-        if (archive == NULL){
-            printf("error, can't open file");
-            return 1;
+static void draw_order(WINDOW *win, Item items[], OrderEntry order[], int n_order) {
+    werase(win);
+    box(win, 0, 0);
+    mvwprintw(win, 0, 2, " Pedido ");
+
+    int h, w;
+    getmaxyx(win, h, w);
+    int rows = h - 4;
+    int name_w = w - 16;
+    if (name_w < 10) name_w = 10;
+
+    for (int i = 0; i < n_order && i < rows; i++) {
+        Item *it = &items[order[i].menu_index];
+        mvwprintw(win, i + 1, 1, " %2dx %-*.*s %6.2f ",
+                  order[i].qty, name_w, name_w,
+                  it->name, it->price * order[i].qty);
+    }
+
+    mvwhline(win, h - 3, 1, ACS_HLINE, w - 2);
+    mvwprintw(win, h - 2, 2, "Total: R$ %.2f", order_total(items, order, n_order));
+    wrefresh(win);
+}
+
+static void draw_status(WINDOW *win) {
+    werase(win);
+    mvwprintw(win, 0, 1,
+              "[Up/Dn] navegar  [Enter] adicionar  [d] remover  [q] finalizar");
+    wrefresh(win);
+}
+
+int main(void) {
+    Item items[MAX_ITEMS];
+    int n_items = load_menu("menu.txt", items, MAX_ITEMS);
+    if (n_items <= 0) {
+        fprintf(stderr, "Erro: nao foi possivel ler menu.txt\n");
+        return 1;
+    }
+
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    curs_set(0);
+
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols);
+    if (rows < 10 || cols < 60) {
+        endwin();
+        fprintf(stderr, "Terminal muito pequeno (minimo 60x10)\n");
+        return 1;
+    }
+
+    int win_h = rows - 2;
+    int menu_w = cols / 2;
+    int order_w = cols - menu_w;
+
+    WINDOW *menu_win   = newwin(win_h, menu_w, 0, 0);
+    WINDOW *order_win  = newwin(win_h, order_w, 0, menu_w);
+    WINDOW *status_win = newwin(2, cols, win_h, 0);
+
+    OrderEntry order[MAX_ITEMS];
+    int n_order = 0;
+    int sel = 0;
+    int top = 0;
+    int rows_visible = win_h - 2;
+
+    draw_status(status_win);
+    draw_menu(menu_win, items, n_items, top, sel);
+    draw_order(order_win, items, order, n_order);
+
+    int ch;
+    while ((ch = getch()) != 'q' && ch != 'Q') {
+        switch (ch) {
+            case KEY_UP:
+                if (sel > 0) sel--;
+                if (sel < top) top = sel;
+                break;
+            case KEY_DOWN:
+                if (sel < n_items - 1) sel++;
+                if (sel >= top + rows_visible) top = sel - rows_visible + 1;
+                break;
+            case KEY_PPAGE:
+                sel -= rows_visible;
+                if (sel < 0) sel = 0;
+                top = sel;
+                break;
+            case KEY_NPAGE:
+                sel += rows_visible;
+                if (sel >= n_items) sel = n_items - 1;
+                if (sel >= top + rows_visible) top = sel - rows_visible + 1;
+                break;
+            case '\n':
+            case KEY_ENTER:
+            case ' ':
+                add_to_order(order, &n_order, sel);
+                break;
+            case 'd':
+            case 'D':
+            case KEY_DC:
+            case KEY_BACKSPACE:
+                remove_from_order(order, &n_order, sel);
+                break;
         }
+        draw_menu(menu_win, items, n_items, top, sel);
+        draw_order(order_win, items, order, n_order);
+    }
 
-        fseek(archive, 0, SEEK_END);
-        long size = ftell(archive); //archive size
-        rewind(archive); 
-        char line[size + 1];
-    
-        while(fgets(line, (int)(size + 1), archive) != NULL){
-            printf("%s", line);
-        }
-        printf("\n");
-        rewind(archive);
+    delwin(menu_win);
+    delwin(order_win);
+    delwin(status_win);
+    endwin();
 
-        float s = 0;
-        float *price = &s;
-        int alfa[100]; //cardinal number of each item
-        int itens = costomer(alfa); //number of itens
-        
-        char eachitem[itens][50]; //item and order
-        memset(eachitem, 0, sizeof(eachitem));
-
-        each_item(archive, alfa, itens, eachitem);
-
-        total(eachitem, itens, price);
-
-        printf("\n\nCHECK\n--------------------\n");
-        for (int i = 0; i < itens; i++){
-            int h = 3;
-            int *p = &h;
-            if (eachitem[i][2] == '0'){
-                h = 4;
-            }
-            printf("%s", eachitem[i] + h);
-        }
-        printf("\n--------------------");
-        printf("\nThe total value of the order is R$: %f\n", s);
-
-        fclose(archive);
+    printf("\nCHECK\n--------------------\n");
+    for (int i = 0; i < n_order; i++) {
+        Item *it = &items[order[i].menu_index];
+        printf("%2dx %-30s %6.2f\n",
+               order[i].qty, it->name, it->price * order[i].qty);
+    }
+    printf("--------------------\n");
+    printf("The total value of the order is R$: %.2f\n",
+           order_total(items, order, n_order));
 
     return 0;
 }
